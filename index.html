@@ -1,620 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Realistic Teachers Day</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teachers Day</title>
+
     <style>
+        /* ---------- Fullscreen reset ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 0;
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0a0a1a;
+            background: #1a1410;
+            font-family: 'Inter', sans-serif;
         }
-        #info {
-            position: absolute;
-            bottom: 8%;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            pointer-events: none;
-            z-index: 10;
-            color: white;
-            text-shadow: 0 4px 30px rgba(0,0,0,0.8);
-            font-weight: 600;
-            letter-spacing: 2px;
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
         }
-        #info h1 {
-            font-size: clamp(2.2rem, 10vw, 4.5rem);
-            margin: 0;
-            padding: 0 20px;
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 50%, #f093fb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-            animation: glowPulse 3s ease-in-out infinite;
-        }
-        #info p {
-            font-size: clamp(0.9rem, 4vw, 1.8rem);
-            margin: 10px 0 0;
-            opacity: 0.9;
-            color: #e0e8ff;
-            text-shadow: 0 2px 20px rgba(0, 20, 80, 0.9);
-            letter-spacing: 6px;
-            -webkit-text-fill-color: #e0e8ff;
-        }
-        @keyframes glowPulse {
-            0% { filter: drop-shadow(0 5px 15px rgba(253, 160, 133, 0.3)); }
-            50% { filter: drop-shadow(0 5px 40px rgba(253, 160, 133, 0.9)); }
-            100% { filter: drop-shadow(0 5px 15px rgba(253, 160, 133, 0.3)); }
-        }
-        /* Loading / fallback */
+
+        /* ---------- Minimal loading ---------- */
         #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-family: sans-serif;
+            position: fixed;
+            inset: 0;
             z-index: 20;
-            background: rgba(0,0,0,0.5);
-            padding: 15px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #1a1410;
+            color: #f5e6d3;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+        #loading.hidden {
+            opacity: 0;
+        }
+        #loading .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(245, 230, 211, 0.10);
+            border-top: 3px solid #e8b87c;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 20px;
+        }
+        #loading p {
+            font-size: 0.9rem;
+            letter-spacing: 0.06em;
+            color: #a0806a;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ---------- Error ---------- */
+        #error-msg {
+            position: fixed;
+            inset: 0;
+            z-index: 30;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 15, 12, 0.95);
+            color: #f5e6d3;
+            padding: 2rem;
+            text-align: center;
+        }
+        #error-msg.visible {
+            display: flex;
+        }
+        #error-msg h2 {
+            font-size: 1.8rem;
+            color: #e8b87c;
+            margin-bottom: 10px;
+        }
+        #error-msg p {
+            max-width: 420px;
+            color: #c4a88a;
+            line-height: 1.5;
+        }
+        #error-msg .retry-btn {
+            margin-top: 22px;
+            padding: 10px 34px;
+            background: #e8b87c;
+            border: none;
             border-radius: 40px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
+            color: #1a1410;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.25s;
+        }
+        #error-msg .retry-btn:hover {
+            background: #f5d0a0;
         }
     </style>
 </head>
-<body>
-    <div id="loading">✨ Loading 3D Scene...</div>
 
-    <div id="info">
-        <h1>Happy Teachers Day</h1>
-        <p>🌟 GUIDING LIGHTS 🌟</p>
+<body>
+
+    <!-- Loading -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Loading…</p>
     </div>
 
-    <!-- Import Three.js Core and Addons from CDN -->
+    <!-- Error -->
+    <div id="error-msg">
+        <h2>...</h2>
+        <p>Could not load <strong>happy_teachers_day.glb</strong>.<br />Make sure it's in the same folder.</p>
+        <button class="retry-btn" onclick="location.reload()">⟳ Retry</button>
+    </div>
+
+    <!-- 3D container -->
+    <div id="container"></div>
+
+    <!-- ============================================================ -->
+    <!--  Three.js via importmap                                        -->
+    <!-- ============================================================ -->
     <script type="importmap">
         {
             "imports": {
-                "three": "https://unpkg.com/three@0.126.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.126.0/examples/jsm/"
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
             }
         }
     </script>
 
     <script type="module">
+        // -----------------------------------------------------------------
+        //  IMPORTS
+        // -----------------------------------------------------------------
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-        // --- Setup Scene, Camera, Renderers ---
+        // -----------------------------------------------------------------
+        //  DOM REFS
+        // -----------------------------------------------------------------
+        const container = document.getElementById('container');
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error-msg');
+
+        // -----------------------------------------------------------------
+        //  SCENE SETUP
+        // -----------------------------------------------------------------
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a1a); // Deep space blue
+        scene.background = new THREE.Color(0x1a1410);
 
-        // Camera (9:16 portrait)
-        const camera = new THREE.PerspectiveCamera(45, 9 / 16, 0.1, 1000);
-        camera.position.set(4, 3, 8);
-        camera.lookAt(0, 0.5, 0);
+        // Camera — fixed "proper" view
+        const camera = new THREE.PerspectiveCamera(32, window.innerWidth / window.innerHeight, 0.1, 100);
+        const PROPER_POS = new THREE.Vector3(4.2, 3.0, 5.8);
+        const PROPER_TARGET = new THREE.Vector3(0, 0.4, 0);
 
-        // WebGL Renderer with shadows
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        camera.position.copy(PROPER_POS);
+
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: false,
+        });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.2;
-        document.body.appendChild(renderer.domElement);
+        container.appendChild(renderer.domElement);
 
-        // CSS2 Renderer for clean text labels (optional, but we use canvas texture for main text)
-        // We'll skip CSS2DRenderer to keep it pure 3D, but we'll use sprites/planes.
+        // Controls — disabled (locked)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.copy(PROPER_TARGET);
+        controls.enableDamping = false;
+        controls.enabled = false; // locked
+        controls.update();
 
-        // --- Lighting (Realistic PBR) ---
-
-        // 1. Ambient fill
-        const ambient = new THREE.AmbientLight(0x404066, 0.6);
+        // -----------------------------------------------------------------
+        //  LIGHTING
+        // -----------------------------------------------------------------
+        const ambient = new THREE.AmbientLight(0x443a32, 0.6);
         scene.add(ambient);
 
-        // 2. Key light - warm directional
-        const keyLight = new THREE.DirectionalLight(0xffeedd, 1.8);
-        keyLight.position.set(-3, 5, 5);
-        keyLight.castShadow = true;
-        keyLight.shadow.mapSize.width = 1024;
-        keyLight.shadow.mapSize.height = 1024;
-        keyLight.shadow.bias = -0.001;
-        const d = 8;
-        keyLight.shadow.camera.left = -d;
-        keyLight.shadow.camera.right = d;
-        keyLight.shadow.camera.top = d;
-        keyLight.shadow.camera.bottom = -d;
-        keyLight.shadow.camera.near = 1;
-        keyLight.shadow.camera.far = 15;
-        scene.add(keyLight);
+        const mainLight = new THREE.DirectionalLight(0xffe6c8, 2.0);
+        mainLight.position.set(6, 10, 4);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        mainLight.shadow.normalBias = 0.02;
+        scene.add(mainLight);
 
-        // 3. Fill light - cool blue
-        const fillLight = new THREE.DirectionalLight(0x88aaff, 0.8);
-        fillLight.position.set(4, 2, -3);
+        const fillLight = new THREE.DirectionalLight(0x8ab4d4, 0.8);
+        fillLight.position.set(-4, 2, -6);
         scene.add(fillLight);
 
-        // 4. Rim light - back
-        const rimLight = new THREE.DirectionalLight(0xffaa66, 0.5);
-        rimLight.position.set(0, 1, -6);
+        const rimLight = new THREE.DirectionalLight(0xe8b87c, 0.5);
+        rimLight.position.set(-2, 4, 6);
         scene.add(rimLight);
 
-        // 5. Point light for sparkle
-        const pointLight = new THREE.PointLight(0xff9944, 0.6, 10);
-        pointLight.position.set(1, 2, 3);
-        scene.add(pointLight);
+        const hemi = new THREE.HemisphereLight(0xffeedd, 0x443a32, 0.6);
+        scene.add(hemi);
 
-        // Optional: helper for debugging (comment out)
-        // const helper = new THREE.DirectionalLightHelper(keyLight, 1);
-        // scene.add(helper);
+        const groundGlow = new THREE.PointLight(0xe8b87c, 0.3, 8);
+        groundGlow.position.set(0, -0.5, 0);
+        scene.add(groundGlow);
 
-        // --- Background: subtle gradient / stars (particles) ---
-        function createStars() {
-            const vertices = [];
-            for (let i = 0; i < 2000; i++) {
-                const x = (Math.random() - 0.5) * 60;
-                const y = (Math.random() - 0.5) * 40;
-                const z = (Math.random() - 0.5) * 40 - 10; // behind and in front
-                vertices.push(x, y, z);
-            }
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({
-                color: 0xffffff,
-                size: 0.08,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending,
-                sizeAttenuation: true
-            });
-            const stars = new THREE.Points(geometry, material);
-            scene.add(stars);
-            return stars;
-        }
-        const starField = createStars();
+        // -----------------------------------------------------------------
+        //  GROUND / SHADOW CATCHER
+        // -----------------------------------------------------------------
+        const groundGeo = new THREE.PlaneGeometry(12, 12);
+        const groundMat = new THREE.ShadowMaterial({
+            opacity: 0.35,
+            color: 0x000000,
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.55;
+        ground.receiveShadow = true;
+        scene.add(ground);
 
-        // --- Create 3D Objects (Realistic) ---
+        // Subtle disk
+        const diskGeo = new THREE.RingGeometry(0.6, 1.6, 64);
+        const diskMat = new THREE.MeshStandardMaterial({
+            color: 0x2d1f18,
+            roughness: 0.8,
+            metalness: 0.1,
+            transparent: true,
+            opacity: 0.40,
+            side: THREE.DoubleSide,
+        });
+        const disk = new THREE.Mesh(diskGeo, diskMat);
+        disk.rotation.x = -Math.PI / 2;
+        disk.position.y = -0.54;
+        scene.add(disk);
 
-        // 1. Floating Book (with pages)
-        function createBook() {
-            const group = new THREE.Group();
+        // -----------------------------------------------------------------
+        //  LOAD GLB
+        // -----------------------------------------------------------------
+        let modelReady = false;
 
-            // Cover
-            const coverGeo = new THREE.BoxGeometry(1.8, 0.12, 1.2);
-            const coverMat = new THREE.MeshStandardMaterial({
-                color: 0x8b1e1e,
-                roughness: 0.4,
-                metalness: 0.1,
-                emissive: 0x330000,
-                emissiveIntensity: 0.1
-            });
-            const cover = new THREE.Mesh(coverGeo, coverMat);
-            cover.castShadow = true;
-            cover.receiveShadow = true;
-            cover.position.y = 0.1;
-            group.add(cover);
+        const loader = new GLTFLoader();
+        const draco = new DRACOLoader();
+        draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
+        loader.setDRACOLoader(draco);
 
-            // Pages
-            const pageGeo = new THREE.BoxGeometry(1.7, 0.08, 1.1);
-            const pageMat = new THREE.MeshStandardMaterial({
-                color: 0xf5e6d3,
-                roughness: 0.9,
-                metalness: 0.0
-            });
-            const pages = new THREE.Mesh(pageGeo, pageMat);
-            pages.castShadow = true;
-            pages.receiveShadow = true;
-            pages.position.y = 0.04;
-            group.add(pages);
+        function loadModel() {
+            loader.load(
+                'happy_teachers_day.glb',
+                (gltf) => {
+                    const model = gltf.scene;
 
-            // Spine detail
-            const spineGeo = new THREE.BoxGeometry(0.1, 0.15, 1.1);
-            const spineMat = new THREE.MeshStandardMaterial({
-                color: 0x6b1414,
-                roughness: 0.5,
-                metalness: 0.2
-            });
-            const spine = new THREE.Mesh(spineGeo, spineMat);
-            spine.position.set(-0.9, 0.1, 0);
-            group.add(spine);
+                    // Auto-scale & center
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 0) {
+                        const scale = 2.2 / maxDim;
+                        model.scale.set(scale, scale, scale);
+                    }
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    model.position.y += 0.1;
 
-            // Pages edge lines (stripes) - just decorative
-            for (let i = 0; i < 5; i++) {
-                const lineGeo = new THREE.BoxGeometry(0.02, 0.01, 1.0);
-                const lineMat = new THREE.MeshStandardMaterial({
-                    color: 0xccbbaa,
-                    roughness: 1.0
-                });
-                const line = new THREE.Mesh(lineGeo, lineMat);
-                line.position.set(0, 0.06 + i * 0.015, 0);
-                group.add(line);
-            }
+                    // Enable shadows + warm materials
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            if (child.material) {
+                                const mats = Array.isArray(child.material) ? child.material : [child
+                                .material];
+                                mats.forEach((m) => {
+                                    if (m.color && m.color.isColor) {
+                                        m.color.lerp(new THREE.Color(0xffddbb), 0.08);
+                                    }
+                                    m.roughness = Math.min(m.roughness || 0.5, 0.7);
+                                });
+                            }
+                        }
+                    });
 
-            // Ribbon bookmark
-            const ribbonGeo = new THREE.BoxGeometry(0.05, 0.3, 0.02);
-            const ribbonMat = new THREE.MeshStandardMaterial({
-                color: 0xff3366,
-                roughness: 0.8,
-                metalness: 0.0
-            });
-            const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat);
-            ribbon.position.set(0.5, 0.2, 0.55);
-            group.add(ribbon);
+                    scene.add(model);
+                    modelReady = true;
 
-            return group;
-        }
+                    // Hide loading
+                    loadingEl.classList.add('hidden');
+                    setTimeout(() => { loadingEl.style.display = 'none'; }, 800);
 
-        const bookGroup = createBook();
-        bookGroup.position.set(-0.8, 0.2, 0);
-        bookGroup.rotation.y = -0.3;
-        bookGroup.rotation.x = 0.1;
-        scene.add(bookGroup);
-
-        // 2. Apple (Sphere + Stem + Leaf)
-        function createApple() {
-            const group = new THREE.Group();
-
-            // Main body - slightly squashed sphere
-            const bodyGeo = new THREE.SphereGeometry(0.6, 32, 32);
-            const bodyMat = new THREE.MeshStandardMaterial({
-                color: 0xcc2233,
-                roughness: 0.3,
-                metalness: 0.1,
-                emissive: 0x440000,
-                emissiveIntensity: 0.1
-            });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.scale.y = 0.9;
-            body.castShadow = true;
-            body.receiveShadow = true;
-            group.add(body);
-
-            // Stem
-            const stemGeo = new THREE.CylinderGeometry(0.03, 0.06, 0.25);
-            const stemMat = new THREE.MeshStandardMaterial({
-                color: 0x4a2c1a,
-                roughness: 0.9,
-                metalness: 0.0
-            });
-            const stem = new THREE.Mesh(stemGeo, stemMat);
-            stem.position.set(0, 0.55, 0);
-            stem.rotation.z = 0.15;
-            stem.rotation.x = 0.1;
-            stem.castShadow = true;
-            group.add(stem);
-
-            // Leaf
-            const leafGeo = new THREE.SphereGeometry(0.12, 8, 8);
-            const leafMat = new THREE.MeshStandardMaterial({
-                color: 0x3a7d3a,
-                roughness: 0.6,
-                metalness: 0.0
-            });
-            const leaf = new THREE.Mesh(leafGeo, leafMat);
-            leaf.scale.set(0.8, 0.1, 0.4);
-            leaf.position.set(0.12, 0.65, 0);
-            leaf.rotation.z = -0.4;
-            leaf.rotation.y = 0.3;
-            leaf.castShadow = true;
-            group.add(leaf);
-
-            // Highlight (tiny specular dot)
-            const hlGeo = new THREE.SphereGeometry(0.06, 8, 8);
-            const hlMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                emissive: 0xffffff,
-                emissiveIntensity: 0.5,
-                transparent: true,
-                opacity: 0.3
-            });
-            const hl = new THREE.Mesh(hlGeo, hlMat);
-            hl.position.set(-0.3, 0.25, 0.5);
-            group.add(hl);
-
-            return group;
+                    // Ensure camera stays locked at proper view
+                    camera.position.copy(PROPER_POS);
+                    controls.target.copy(PROPER_TARGET);
+                    controls.update();
+                },
+                (xhr) => {
+                    const pct = Math.round((xhr.loaded / xhr.total) * 100);
+                    if (pct < 100) {
+                        document.querySelector('#loading p').textContent = `Loading… ${pct}%`;
+                    }
+                },
+                (err) => {
+                    console.error('GLB load error:', err);
+                    loadingEl.classList.add('hidden');
+                    setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
+                    errorEl.classList.add('visible');
+                }
+            );
         }
 
-        const apple = createApple();
-        apple.position.set(0.9, 0.8, -0.5);
-        apple.rotation.y = 0.8;
-        apple.rotation.x = 0.2;
-        scene.add(apple);
+        loadModel();
 
-        // 3. Pencil (floating)
-        function createPencil() {
-            const group = new THREE.Group();
+        // -----------------------------------------------------------------
+        //  RESIZE
+        // -----------------------------------------------------------------
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        });
 
-            // Body (hexagonal prism effect - use cylinder with 6 segments)
-            const bodyGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.8, 6);
-            const bodyMat = new THREE.MeshStandardMaterial({
-                color: 0xf4c542,
-                roughness: 0.5,
-                metalness: 0.1
-            });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.castShadow = true;
-            body.receiveShadow = true;
-            body.rotation.x = Math.PI / 2;
-            group.add(body);
-
-            // Tip (cone)
-            const tipGeo = new THREE.ConeGeometry(0.08, 0.15, 6);
-            const tipMat = new THREE.MeshStandardMaterial({
-                color: 0xeeddbb,
-                roughness: 0.7,
-                metalness: 0.0
-            });
-            const tip = new THREE.Mesh(tipGeo, tipMat);
-            tip.castShadow = true;
-            tip.position.set(0.47, 0, 0);
-            tip.rotation.z = Math.PI / 2;
-            group.add(tip);
-
-            // Graphite tip
-            const graphGeo = new THREE.ConeGeometry(0.03, 0.05, 6);
-            const graphMat = new THREE.MeshStandardMaterial({
-                color: 0x222222,
-                roughness: 0.9,
-                metalness: 0.0
-            });
-            const graph = new THREE.Mesh(graphGeo, graphMat);
-            graph.position.set(0.55, 0, 0);
-            graph.rotation.z = Math.PI / 2;
-            group.add(graph);
-
-            // Eraser end
-            const erasGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.08, 6);
-            const erasMat = new THREE.MeshStandardMaterial({
-                color: 0xff88aa,
-                roughness: 0.9,
-                metalness: 0.0
-            });
-            const eras = new THREE.Mesh(erasGeo, erasMat);
-            eras.position.set(-0.44, 0, 0);
-            eras.rotation.x = Math.PI / 2;
-            eras.castShadow = true;
-            group.add(eras);
-
-            // Metal band
-            const bandGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.04, 8);
-            const bandMat = new THREE.MeshStandardMaterial({
-                color: 0xccccdd,
-                roughness: 0.2,
-                metalness: 0.8
-            });
-            const band = new THREE.Mesh(bandGeo, bandMat);
-            band.position.set(-0.4, 0, 0);
-            band.rotation.x = Math.PI / 2;
-            band.castShadow = true;
-            group.add(band);
-
-            return group;
-        }
-
-        const pencil = createPencil();
-        pencil.position.set(-1.2, 1.4, 0.8);
-        pencil.rotation.y = 0.5;
-        pencil.rotation.z = 0.2;
-        scene.add(pencil);
-
-        // 4. Floating Chalkboard / Banner (with text texture)
-        function createChalkboard() {
-            const group = new THREE.Group();
-
-            // Board
-            const boardGeo = new THREE.BoxGeometry(2.4, 0.8, 0.05);
-            const boardMat = new THREE.MeshStandardMaterial({
-                color: 0x1a2a3a,
-                roughness: 0.8,
-                metalness: 0.1,
-                emissive: 0x0a1a2a,
-                emissiveIntensity: 0.2
-            });
-            const board = new THREE.Mesh(boardGeo, boardMat);
-            board.castShadow = true;
-            board.receiveShadow = true;
-            group.add(board);
-
-            // Wooden frame
-            const frameMat = new THREE.MeshStandardMaterial({
-                color: 0x5a3a2a,
-                roughness: 0.9,
-                metalness: 0.0
-            });
-            // top
-            const top = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 0.15), frameMat);
-            top.position.set(0, 0.44, 0);
-            group.add(top);
-            // bottom
-            const bottom = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 0.15), frameMat);
-            bottom.position.set(0, -0.44, 0);
-            group.add(bottom);
-            // left
-            const left = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.15), frameMat);
-            left.position.set(-1.24, 0, 0);
-            group.add(left);
-            // right
-            const right = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.15), frameMat);
-            right.position.set(1.24, 0, 0);
-            group.add(right);
-
-            // Text on board using canvas texture
-            const canvas = document.createElement('canvas');
-            canvas.width = 1024;
-            canvas.height = 360;
-            const ctx = canvas.getContext('2d');
-            
-            // Background (transparent, we already have board color)
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Chalk text effect
-            ctx.font = 'Bold 100px "Segoe UI", "Arial", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // Glow shadow
-            ctx.shadowColor = 'rgba(255, 200, 100, 0.6)';
-            ctx.shadowBlur = 30;
-            ctx.fillStyle = '#f5e6d3';
-            ctx.fillText('📚 THANK YOU', canvas.width/2, canvas.height/2 - 40);
-            
-            ctx.shadowBlur = 20;
-            ctx.font = '60px "Segoe UI", "Arial", sans-serif';
-            ctx.fillStyle = '#d4c9b8';
-            ctx.fillText('FOR GUIDING US', canvas.width/2, canvas.height/2 + 60);
-
-            // Add some chalk dust particles (small dots)
-            ctx.shadowBlur = 0;
-            for (let i = 0; i < 200; i++) {
-                ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.3})`;
-                ctx.beginPath();
-                ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            const texture = new THREE.CanvasTexture(canvas);
-            const textMat = new THREE.MeshStandardMaterial({
-                map: texture,
-                transparent: true,
-                side: THREE.DoubleSide,
-                emissive: 0x445566,
-                emissiveIntensity: 0.2
-            });
-            const textPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.7), textMat);
-            textPlane.position.set(0, 0, 0.03);
-            group.add(textPlane);
-
-            return group;
-        }
-
-        const chalkboard = createChalkboard();
-        chalkboard.position.set(0, 1.8, -0.5);
-        chalkboard.rotation.y = 0.1;
-        chalkboard.rotation.x = -0.05;
-        scene.add(chalkboard);
-
-        // --- Floating Particles (Glowing dust / magic) ---
-        function createFloatingParticles() {
-            const count = 300;
-            const positions = new Float32Array(count * 3);
-            const colors = new Float32Array(count * 3);
-            const sizes = new Float32Array(count);
-
-            for (let i = 0; i < count; i++) {
-                positions[i*3] = (Math.random() - 0.5) * 10;
-                positions[i*3+1] = (Math.random() - 0.5) * 6 + 1;
-                positions[i*3+2] = (Math.random() - 0.5) * 6 - 1;
-                
-                const color = new THREE.Color().setHSL(0.05 + Math.random() * 0.1, 0.8, 0.6 + Math.random() * 0.3);
-                colors[i*3] = color.r;
-                colors[i*3+1] = color.g;
-                colors[i*3+2] = color.b;
-                
-                sizes[i] = 0.02 + Math.random() * 0.06;
-            }
-
-            const geo = new THREE.BufferGeometry();
-            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-            geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-            const mat = new THREE.PointsMaterial({
-                size: 0.08,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.7,
-                blending: THREE.AdditiveBlending,
-                sizeAttenuation: true
-            });
-
-            const points = new THREE.Points(geo, mat);
-            scene.add(points);
-            return points;
-        }
-
-        const particles = createFloatingParticles();
-
-        // --- Animation Loop ---
-        let clock = new THREE.Clock();
-
+        // -----------------------------------------------------------------
+        //  ANIMATION LOOP — camera stays locked
+        // -----------------------------------------------------------------
         function animate() {
-            const delta = clock.getDelta();
-            const elapsedTime = performance.now() / 1000;
+            requestAnimationFrame(animate);
 
-            // Rotate book slowly
-            bookGroup.rotation.y = -0.3 + Math.sin(elapsedTime * 0.3) * 0.15;
-            bookGroup.position.y = 0.2 + Math.sin(elapsedTime * 0.6) * 0.1;
-            
-            // Apple bob and rotate
-            apple.position.y = 0.8 + Math.sin(elapsedTime * 0.7 + 1) * 0.12;
-            apple.rotation.y += 0.002;
-            apple.rotation.z = 0.2 + Math.sin(elapsedTime * 0.4) * 0.05;
-
-            // Pencil float
-            pencil.position.y = 1.4 + Math.sin(elapsedTime * 0.5 + 2) * 0.15;
-            pencil.rotation.z = 0.2 + Math.sin(elapsedTime * 0.3) * 0.1;
-
-            // Chalkboard float
-            chalkboard.position.y = 1.8 + Math.sin(elapsedTime * 0.4 + 0.5) * 0.08;
-
-            // Rotate star field slowly
-            starField.rotation.y += 0.0002;
-            starField.rotation.x += 0.0001;
-
-            // Animate particles
-            const positions = particles.geometry.attributes.position.array;
-            for (let i = 0; i < positions.length; i += 3) {
-                positions[i+1] += Math.sin(elapsedTime * 0.5 + positions[i]) * 0.0005;
-                positions[i] += Math.cos(elapsedTime * 0.3 + positions[i+1]) * 0.0005;
-                // keep within bounds
-                if (positions[i] > 5) positions[i] = -5;
-                if (positions[i] < -5) positions[i] = 5;
-                if (positions[i+1] > 4) positions[i+1] = -2;
-                if (positions[i+1] < -2) positions[i+1] = 4;
-            }
-            particles.geometry.attributes.position.needsUpdate = true;
-
-            // Camera auto-orbit (subtle)
-            const radius = 8.5;
-            const speed = 0.08;
-            const angle = elapsedTime * speed;
-            camera.position.x = Math.sin(angle) * radius * 0.6;
-            camera.position.z = 6 + Math.cos(angle) * radius * 0.4;
-            camera.position.y = 2.5 + Math.sin(angle * 0.5) * 0.5;
-            camera.lookAt(0, 1.0, 0);
+            // Enforce proper view every frame (locked)
+            camera.position.copy(PROPER_POS);
+            controls.target.copy(PROPER_TARGET);
+            controls.update();
 
             renderer.render(scene, camera);
-            requestAnimationFrame(animate);
         }
 
         animate();
 
-        // --- Resize Handler ---
-        window.addEventListener('resize', () => {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
-        });
-
-        // Remove loading text
-        document.getElementById('loading').style.display = 'none';
-
-        // Handle visibility change to prevent stutter
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                clock.stop();
-            } else {
-                clock.start();
+        // -----------------------------------------------------------------
+        //  FALLBACK: if loading takes too long
+        // -----------------------------------------------------------------
+        const timeoutId = setTimeout(() => {
+            if (!modelReady && !errorEl.classList.contains('visible')) {
+                loadingEl.classList.add('hidden');
+                setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
+                errorEl.classList.add('visible');
             }
+        }, 20000);
+
+        document.addEventListener('model-ready', () => {
+            clearTimeout(timeoutId);
         });
 
-        console.log('🎓 Happy Teachers Day! 3D Realistic Scene Loaded.');
+        console.log('🎓 Happy Teachers Day — view locked');
     </script>
 </body>
 </html>
